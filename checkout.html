@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uandra Andrade - Finalizar Pedido</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --gold: #c8956c;
+            --gold-light: #d4a574;
+            --green: #3d5a3c;
+            --green-hover: #2f4630;
+            --white: #ffffff;
+            --bg: #f3f1ee;
+            --transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); -webkit-font-smoothing: antialiased; }
+
+        .header {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(30px);
+            padding: 14px 30px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 30px rgba(0,0,0,0.04); position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.03); height: 70px;
+        }
+        .back-btn { display: flex; align-items: center; gap: 6px; color: var(--primary); text-decoration: none; font-weight: 500; font-size: 14px; padding: 8px 14px; border-radius: 25px; transition: var(--transition); }
+        .back-btn:hover { color: var(--gold); background: rgba(200,149,108,0.06); }
+        .logo-center { position: absolute; left: 50%; transform: translateX(-50%); }
+        .logo-center img { height: 55px; object-fit: contain; transition: var(--transition); }
+        .logo-center:hover img { transform: scale(1.03); }
+        .header { position: relative; }
+        .user-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); overflow: hidden;
+            cursor: pointer; background: #f5f5f5; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .user-btn img { width: 100%; height: 100%; object-fit: cover; }
+        .user-btn:hover { transform: scale(1.05); }
+
+        .main-container { max-width: 100%; margin: 70px 0 0; padding: 0; }
+        .checkout-card {
+            background: white; padding: 20px 22px 30px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.04);
+            border: none;
+        }
+
+        .checkout-header { text-align: center; margin-bottom: 18px; }
+        .checkout-header h2 { color: var(--primary); font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.5px; }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; font-size: 11px; color: var(--primary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input {
+            width: 100%; padding: 12px 16px; border: 2px solid #e0dcd5; border-radius: 14px;
+            font-size: 13px; background: #fafaf8; transition: var(--transition);
+        }
+        .form-group input:focus { outline: none; border-color: var(--gold); background: white; box-shadow: 0 4px 15px rgba(200,149,108,0.08); }
+        .form-group input[readonly] { background: #f5f5f5; color: #888; }
+
+        .variant-selector { margin: 10px 0; padding: 12px 14px; background: #fafaf8; border-radius: 12px; border: 1px solid #f0ede8; }
+        .variant-selector h5 { font-size: 12px; color: var(--primary); margin-bottom: 6px; font-weight: 600; }
+        .variant-options { display: flex; gap: 6px; flex-wrap: wrap; }
+        .variant-btn {
+            padding: 6px 14px; border: 2px solid #e0dcd5; border-radius: 22px;
+            background: white; cursor: pointer; font-size: 11px; font-weight: 500;
+            transition: var(--transition); color: #555;
+        }
+        .variant-btn:hover { border-color: var(--gold); }
+        .variant-btn.selected { border-color: var(--gold); background: var(--gold); color: white; }
+        .variant-btn.color-btn {
+            width: 32px; height: 32px; border-radius: 50%; padding: 0;
+            border: 3px solid #e0dcd5; display: inline-flex; align-items: center;
+            justify-content: center; font-size: 0;
+        }
+        .variant-btn.color-btn.selected { border-color: var(--gold); box-shadow: 0 0 0 2px white, 0 0 0 4px var(--gold); }
+        .variant-btn.color-btn .color-name { display: none; }
+
+        .order-summary { background: #fdfaf7; padding: 14px 16px; border-radius: 14px; margin: 14px 0; border: 1px solid #f0e8df; }
+        .order-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0e8df; font-size: 12px; flex-wrap: wrap; }
+        .order-item:last-child { border-bottom: none; }
+        .order-item-info { flex: 1; }
+        .order-item-selected { font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 2px; }
+        .order-item-price { font-weight: 600; color: var(--primary); margin-left: 8px; font-size: 12px; }
+        .promo-tag { background: #ff8c00; color: white; padding: 1px 8px; border-radius: 10px; font-size: 8px; font-weight: 700; display: inline-block; margin-left: 4px; }
+        .order-total { display: flex; justify-content: space-between; padding-top: 10px; margin-top: 8px; border-top: 2px solid var(--gold); font-size: 15px; font-weight: 700; }
+
+        .cupom-section { margin-bottom: 14px; }
+        .cupom-section label { font-size: 11px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .cupom-input { display: flex; gap: 8px; margin-top: 4px; }
+        .cupom-input input { flex: 1; padding: 10px 14px; border: 2px solid #e0dcd5; border-radius: 50px; font-size: 12px; }
+        .cupom-input input:focus { outline: none; border-color: var(--gold); }
+        .cupom-input button {
+            padding: 10px 18px; background: var(--gold); color: white; border: none; border-radius: 50px;
+            font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition);
+        }
+        .cupom-input button:hover { background: var(--gold-light); }
+        .cupom-msg { font-size: 10px; margin-top: 4px; display: none; }
+
+        .payment-methods { margin: 14px 0; }
+        .payment-methods h4 { color: var(--primary); margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+        .payment-methods h4 i { color: var(--gold); }
+        .payment-option {
+            display: flex; align-items: center; padding: 10px 14px; border: 2px solid #e0dcd5; border-radius: 14px;
+            margin-bottom: 6px; cursor: pointer; transition: var(--transition); gap: 10px; font-size: 13px;
+        }
+        .payment-option:hover { border-color: var(--gold); }
+        .payment-option.selected { border-color: var(--gold); background: rgba(200,149,108,0.03); }
+        .payment-option input[type="radio"] { accent-color: var(--gold); width: 16px; height: 16px; }
+
+        .frete-info {
+            background: #e8f5e9; padding: 10px 14px; border-radius: 10px;
+            font-size: 12px; color: #2e7d32; margin: 8px 0 14px;
+            display: flex; align-items: center; gap: 8px; border: 1px solid #c8e6c9;
+        }
+        .frete-info i { font-size: 16px; }
+
+        .confirm-button {
+            width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: 50px;
+            font-size: 14px; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; transition: var(--transition);
+        }
+        .confirm-button:hover { background: var(--green-hover); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(61,90,60,0.2); }
+        .confirm-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .whatsapp-info { text-align: center; margin-top: 10px; color: #888; font-size: 11px; }
+
+        .terms-section { margin-top: 14px; padding: 12px 14px; background: #fafaf8; border-radius: 12px; border: 1px solid #f0ede8; max-height: 100px; overflow-y: auto; font-size: 10px; color: #666; line-height: 1.6; }
+        .terms-section::-webkit-scrollbar { width: 3px; }
+        .terms-section::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+        .terms-section h5 { font-size: 10px; color: var(--primary); font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+        .terms-section p { margin-bottom: 3px; }
+
+        .variant-error { color: #e94560; font-size: 10px; margin-top: 3px; display: none; }
+        .variant-error.show { display: block; }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-overlay .spinner {
+            width: 50px; height: 50px; border: 3px solid #e0dcd5;
+            border-top-color: var(--gold); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-overlay h3 { font-size: 18px; color: var(--primary); font-weight: 700; margin-bottom: 8px; text-align: center; }
+        .loading-overlay p { font-size: 13px; color: #666; text-align: center; max-width: 400px; line-height: 1.6; }
+        .loading-overlay .loading-icon { font-size: 44px; color: var(--gold); margin-bottom: 16px; animation: pulse-icon 1.5s infinite; }
+        @keyframes pulse-icon { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:0.7} }
+        .loading-overlay .details { font-size: 11px; color: #999; margin-top: 12px; border-top: 1px solid #f0ede8; padding-top: 12px; max-width: 380px; text-align: center; line-height: 1.6; }
+
+        .footer { background: var(--white); color: var(--primary); padding: 40px 30px 28px; margin-top: 40px; border-radius: 40px 40px 0 0; box-shadow: 0 -5px 30px rgba(0,0,0,0.04); }
+        .footer-content { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .footer-column h4 { font-size: 14px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--gold); display: inline-block; }
+        .footer-column p, .footer-column a { color: #666; text-decoration: none; display: block; margin-bottom: 8px; font-size: 12px; transition: var(--transition); }
+        .footer-column a:hover { color: var(--gold); }
+        .footer-payment { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .payment-icon { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: #f5f5f5; border-radius: 20px; font-size: 11px; color: #555; font-weight: 500; transition: var(--transition); }
+        .payment-icon i { font-size: 14px; } .payment-icon .pix-icon { color: #00b8a9; } .payment-icon .card-icon { color: #1565c0; } .payment-icon .boleto-icon { color: #e65100; }
+        .payment-icon:hover { background: #eee; transform: translateY(-2px); }
+        .footer-bottom { text-align: center; padding-top: 20px; margin-top: 20px; border-top: 1px solid #f0ede8; color: #999; font-size: 11px; }
+        .security-badge { display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 10px; color: #999; font-size: 11px; }
+        .security-badge i { color: var(--green); }
+
+        @media (max-width: 480px) { 
+            .checkout-card { padding: 14px 14px 20px; } 
+            .footer-content { grid-template-columns: 1fr; } 
+            .loading-overlay h3 { font-size: 16px; } 
+            .header { padding: 10px 16px; height: 60px; }
+            .logo-center img { height: 42px; }
+            .main-container { margin: 60px 0 0; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Voltar</a>
+        <a href="index.html" class="logo-center"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj60jjuQ_0EAWlH5fEDfFI0_Auf55PjoMG0VjpNvJG1J3mUPoxtjnetS_J6zeB8G5mKNj6c0IH-UboT_jSNl2pFSzqMWqDvF-IxhJdVu5h9O2wXwyHx_SzOn7OEZcU8E3ta80tcPKS79i-mzOlcT5ycDEp_Hiz9WphJbtnDsw5dzdzDMVvUcnha6m37xY4/s2409/E4C9BE77-72F4-409A-B4B7-8927274CE292.png" alt="Logo Uandra Andrade"></a>
+        <a href="conta.html" class="user-btn" id="headerAvatar"><i class="fas fa-user" style="color:var(--gold);"></i></a>
+    </header>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-icon"><i class="fab fa-whatsapp"></i></div>
+        <div class="spinner"></div>
+        <h3>Redirecionando para o WhatsApp</h3>
+        <p>Você está sendo redirecionado para o WhatsApp para finalizar o seu pedido.</p>
+        <div class="details">
+            <p>Após o redirecionamento, você poderá finalizar o pagamento diretamente pelo WhatsApp.</p>
+            <p style="margin-top:4px;color:#888;">Aguarde, estamos preparando seu pedido...</p>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="checkout-card">
+            <div class="checkout-header"><h2><i class="fas fa-credit-card"></i> Finalizar Pedido</h2></div>
+
+            <div class="form-group"><label>Nome Completo</label><input type="text" id="customerName" readonly></div>
+            <div class="form-group"><label>Email</label><input type="email" id="customerEmail" readonly></div>
+            <div class="form-group"><label>Telefone</label><input type="tel" id="customerPhone" readonly></div>
+
+            <div id="variantsContainer"></div>
+
+            <div class="order-summary">
+                <h4 style="margin-bottom:8px;color:var(--primary);font-size:13px;"><i class="fas fa-shopping-bag"></i> Resumo do Pedido</h4>
+                <div id="orderItems"></div>
+                <div class="order-total"><span>Subtotal</span><span id="orderSubtotal" style="color:var(--gold);">R$ 0,00</span></div>
+                <div id="discountRow" style="display:none;color:#4a6741;font-size:12px;margin-top:4px;">Desconto cupom: -<span id="discountAmount">R$ 0,00</span></div>
+                <div class="order-total" style="margin-top:4px;"><span>Total</span><span id="orderTotal" style="color:var(--gold);">R$ 0,00</span></div>
+            </div>
+
+            <div class="cupom-section">
+                <label>Cupom de Desconto</label>
+                <div class="cupom-input"><input type="text" id="cupomInput" placeholder="Digite o codigo"><button onclick="applyCupom()">Aplicar</button></div>
+                <small class="cupom-msg" id="cupomMsg"></small>
+            </div>
+
+            <div class="payment-methods">
+                <h4><i class="fas fa-credit-card"></i> Forma de Pagamento</h4>
+                <label class="payment-option selected" onclick="selectPayment(this)"><input type="radio" name="payment" value="dinheiro" checked><i class="fas fa-money-bill-wave" style="color:var(--gold);"></i> Dinheiro</label>
+                <label class="payment-option" onclick="selectPayment(this)"><input type="radio" name="payment" value="cartao"><i class="fas fa-credit-card" style="color:var(--gold);"></i> Cartão de Crédito</label>
+                <label class="payment-option" onclick="selectPayment(this)"><input type="radio" name="payment" value="boleto"><i class="fas fa-barcode" style="color:var(--gold);"></i> Boleto</label>
+            </div>
+
+            <div class="frete-info">
+                <i class="fas fa-truck"></i>
+                <span>O valor do frete será calculado e informado pelo atendente no WhatsApp após a finalização do pedido.</span>
+            </div>
+
+            <button class="confirm-button" id="confirmBtn" onclick="completeOrder()" disabled>
+                <i class="fab fa-whatsapp"></i> Finalizar via WhatsApp
+            </button>
+            <div class="whatsapp-info"><i class="fab fa-whatsapp" style="color:#25D366;"></i> Você será redirecionado para o WhatsApp (83) 98806-2223</div>
+
+            <div class="terms-section">
+                <h5><i class="fas fa-file-alt"></i> Termos de Uso</h5>
+                <p>Ao finalizar esta compra, você concorda com os nossos termos de uso e política de privacidade. Os dados fornecidos serão utilizados exclusivamente para processamento do pedido e comunicação via WhatsApp. O pagamento será realizado diretamente com o vendedor após a confirmação do pedido.</p>
+                <p>O prazo de entrega varia de acordo com a localização e será informado no momento da confirmação do pedido. O código de rastreio será enviado pelo WhatsApp assim que o pedido for despachado.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column"><h4>Institucional</h4><a href="informacoes.html">Sobre Nós</a><a href="informacoes.html">Política de Privacidade</a><a href="informacoes.html">Termos de Uso</a></div>
+            <div class="footer-column"><h4>Contato</h4><p><i class="fas fa-map-marker-alt"></i> Mussurunga, Rotula do Setor C</p><p><i class="fas fa-phone"></i> (83) 99980-0154</p><p><i class="fas fa-envelope"></i> contato@uandrandrade.com.br</p></div>
+            <div class="footer-column"><h4>Formas de Pagamento</h4><div class="footer-payment"><span class="payment-icon"><i class="fas fa-qrcode pix-icon"></i> Pix</span><span class="payment-icon"><i class="fas fa-credit-card card-icon"></i> Cartão</span><span class="payment-icon"><i class="fas fa-barcode boleto-icon"></i> Boleto</span></div></div>
+        </div>
+        <div class="footer-bottom"><div class="security-badge"><i class="fas fa-lock"></i><span>Ambiente seguro</span><i class="fas fa-shield-alt"></i></div><p style="margin-top:8px;">&copy; 2026 - Uandra Andrade - Todos os direitos reservados.</p></div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        const firebaseConfig={apiKey:"AIzaSyCVdKIP6jl-mLaqHNMW-IwK3pVkvhuSvSI",databaseURL:"https://san7-brasil-default-rtdb.firebaseio.com",projectId:"san7-brasil",authDomain:"san7-brasil.firebaseapp.com"};
+        firebase.initializeApp(firebaseConfig);const database=firebase.database();
+        const currentUser=JSON.parse(localStorage.getItem('currentUser'));
+        if(!currentUser||!currentUser.id){localStorage.setItem('redirectAfterLogin','checkout.html');window.location.href='index.html';}
+        let cart=JSON.parse(localStorage.getItem('cart'))||[];
+        let productDataCache = {};
+        let appliedCupom=null;
+        let discountValue=0;
+        let cashTotal=0;
+        let cardTotal=0;
+        let selectedVariants = {};
+
+        if(cart.length===0){window.location.href='index.html';}
+        document.getElementById('customerName').value=currentUser.name||'';document.getElementById('customerEmail').value=currentUser.email||'';document.getElementById('customerPhone').value=currentUser.phone||'';
+        if(currentUser.photoURL){document.getElementById('headerAvatar').innerHTML=`<img src="${currentUser.photoURL}" style="width:100%;height:100%;object-fit:cover;">`;}
+
+        function selectPayment(el){
+            document.querySelectorAll('.payment-option').forEach(o=>o.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input[type="radio"]').checked=true;
+            updateTotal();
+            validateVariants();
+        }
+
+        function getProductPrice(product, paymentMethod) {
+            if (!product) return 0;
+            let price = product.basePrice || product.price || 0;
+            const now = Date.now();
+            if (product.promotion) {
+                const start = product.promotion.start ? new Date(product.promotion.start).getTime() : null;
+                const end = product.promotion.end ? new Date(product.promotion.end).getTime() : null;
+                if (start && end && now >= start && now <= end) {
+                    if (paymentMethod === 'cartao' && product.promotion.cardPrice !== undefined && product.promotion.cardPrice > 0) {
+                        price = product.promotion.cardPrice;
+                    } else if (paymentMethod !== 'cartao' && product.promotion.cashPrice !== undefined && product.promotion.cashPrice > 0) {
+                        price = product.promotion.cashPrice;
+                    } else if (product.promotion.cashPrice !== undefined && product.promotion.cashPrice > 0) {
+                        price = product.promotion.cashPrice;
+                    }
+                }
+            }
+            if (paymentMethod === 'cartao' && product.cardPrice !== undefined && product.cardPrice !== null && product.cardPrice > 0) {
+                const hasActivePromo = product.promotion && product.promotion.start && product.promotion.end && now >= new Date(product.promotion.start).getTime() && now <= new Date(product.promotion.end).getTime();
+                if (!hasActivePromo) { price = product.cardPrice; }
+            }
+            return price;
+        }
+
+        function loadOrderSummary(){
+            const oi=document.getElementById('orderItems');
+            oi.innerHTML='';
+            cashTotal=0; cardTotal=0;
+            let loaded=0;
+            if(cart.length===0) return;
+            
+            cart.forEach((item, index)=>{
+                database.ref(`products/${item.id}`).once('value',(snap)=>{
+                    const p=snap.val();
+                    loaded++;
+                    if(p){
+                        productDataCache[item.id] = p;
+                        const pricePix = getProductPrice(p, 'pix');
+                        const priceCard = getProductPrice(p, 'cartao');
+                        cashTotal += pricePix;
+                        cardTotal += priceCard;
+                        
+                        let selectedInfo = [];
+                        if(item.selectedSize) selectedInfo.push(`Tamanho: ${item.selectedSize}`);
+                        if(item.selectedColor) selectedInfo.push(`Cor: ${item.selectedColor}`);
+                        
+                        let promoTag = '';
+                        const now = Date.now();
+                        if(p.promotion && p.promotion.start && p.promotion.end) {
+                            const start = new Date(p.promotion.start).getTime();
+                            const end = new Date(p.promotion.end).getTime();
+                            if(now >= start && now <= end && (p.promotion.cashPrice > 0 || p.promotion.cardPrice > 0)) {
+                                promoTag = '<span class="promo-tag">PROMO</span>';
+                            }
+                        }
+                        
+                        oi.innerHTML += `
+                            <div class="order-item">
+                                <div class="order-item-info">
+                                    <span>${p.title} ${promoTag}</span>
+                                    ${selectedInfo.length > 0 ? `<div class="order-item-selected">${selectedInfo.join(' | ')}</div>` : ''}
+                                </div>
+                                <span class="order-item-price">R$ ${pricePix.toFixed(2)}</span>
+                            </div>
+                        `;
+                        
+                        buildVariantSelector(item.id, p);
+                    }
+                    if(loaded === cart.length){ updateTotal(); validateVariants(); }
+                });
+            });
+        }
+
+        function buildVariantSelector(itemId, product) {
+            const container = document.getElementById('variantsContainer');
+            if (!container) return;
+            
+            let existing = container.querySelector(`[data-item="${itemId}"]`);
+            if (existing) existing.remove();
+            
+            const hasSizes = product.sizes && product.sizes.length > 0;
+            const hasColors = product.colors && product.colors.length > 0;
+            
+            if (!hasSizes && !hasColors) {
+                const hidden = document.createElement('div');
+                hidden.dataset.item = itemId;
+                hidden.style.display = 'none';
+                hidden.innerHTML = `<input type="hidden" id="variant_${itemId}_ok" value="1">`;
+                container.appendChild(hidden);
+                selectedVariants[itemId] = { size: 'Unico', color: 'Padrao' };
+                validateVariants();
+                return;
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'variant-selector';
+            div.dataset.item = itemId;
+            div.innerHTML = `<h5><i class="fas fa-tshirt"></i> Escolha as opções para ${product.title}</h5>`;
+            
+            if (hasSizes) {
+                div.innerHTML += `<div style="margin-bottom:8px;"><label style="font-size:10px;font-weight:600;color:#888;">Tamanho</label><div class="variant-options" id="size_${itemId}">`;
+                product.sizes.forEach(s => {
+                    const sel = (product.selectedSize === s) ? 'selected' : '';
+                    div.innerHTML += `<button class="variant-btn ${sel}" onclick="selectVariant('${itemId}','size','${s}')">${s}</button>`;
+                });
+                div.innerHTML += `</div><div class="variant-error" id="sizeError_${itemId}">Selecione um tamanho</div></div>`;
+            }
+            
+            if (hasColors) {
+                div.innerHTML += `<div><label style="font-size:10px;font-weight:600;color:#888;">Cor</label><div class="variant-options" id="color_${itemId}">`;
+                product.colors.forEach(c => {
+                    const sel = (product.selectedColor === c.name) ? 'selected' : '';
+                    div.innerHTML += `<button class="variant-btn color-btn ${sel}" style="background:${c.hex};" onclick="selectVariant('${itemId}','color','${c.name}','${c.hex}')"><span class="color-name">${c.name}</span></button>`;
+                });
+                div.innerHTML += `</div><div class="variant-error" id="colorError_${itemId}">Selecione uma cor</div></div>`;
+            }
+            
+            container.appendChild(div);
+            
+            const cartItem = cart.find(i => i.id === itemId);
+            if (cartItem) {
+                if (cartItem.selectedSize) selectVariant(itemId, 'size', cartItem.selectedSize);
+                if (cartItem.selectedColor) selectVariant(itemId, 'color', cartItem.selectedColor, cartItem.selectedColorHex);
+            }
+        }
+
+        function selectVariant(itemId, type, value, hex) {
+            if (!selectedVariants[itemId]) selectedVariants[itemId] = {};
+            if (type === 'size') {
+                selectedVariants[itemId].size = value;
+                document.querySelectorAll(`#size_${itemId} .variant-btn`).forEach(b => b.classList.toggle('selected', b.textContent === value));
+                document.getElementById(`sizeError_${itemId}`)?.classList.remove('show');
+                const cartItem = cart.find(i => i.id === itemId);
+                if (cartItem) cartItem.selectedSize = value;
+            } else if (type === 'color') {
+                selectedVariants[itemId].color = value;
+                selectedVariants[itemId].colorHex = hex || '';
+                document.querySelectorAll(`#color_${itemId} .variant-btn`).forEach(b => {
+                    const isSelected = b.textContent.trim() === value || b.style.background === hex;
+                    b.classList.toggle('selected', isSelected);
+                });
+                document.getElementById(`colorError_${itemId}`)?.classList.remove('show');
+                const cartItem = cart.find(i => i.id === itemId);
+                if (cartItem) { cartItem.selectedColor = value; cartItem.selectedColorHex = hex || ''; }
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            validateVariants();
+            updateTotal();
+        }
+
+        function validateVariants() {
+            let allValid = true;
+            cart.forEach(item => {
+                const p = productDataCache[item.id];
+                if (!p) return;
+                const hasSizes = p.sizes && p.sizes.length > 0;
+                const hasColors = p.colors && p.colors.length > 0;
+                const sel = selectedVariants[item.id] || {};
+                
+                if (hasSizes && !sel.size) { allValid = false; document.getElementById(`sizeError_${item.id}`)?.classList.add('show'); }
+                else { document.getElementById(`sizeError_${item.id}`)?.classList.remove('show'); }
+                
+                if (hasColors && !sel.color) { allValid = false; document.getElementById(`colorError_${item.id}`)?.classList.add('show'); }
+                else { document.getElementById(`colorError_${item.id}`)?.classList.remove('show'); }
+            });
+            
+            document.getElementById('confirmBtn').disabled = !allValid;
+            return allValid;
+        }
+
+        function updateTotal(){
+            const pm = document.querySelector('input[name="payment"]:checked')?.value || 'dinheiro';
+            cashTotal = 0; cardTotal = 0;
+            cart.forEach(item => {
+                const p = productDataCache[item.id];
+                if(p) {
+                    cashTotal += getProductPrice(p, 'pix');
+                    cardTotal += getProductPrice(p, 'cartao');
+                }
+            });
+            let base = pm === 'cartao' ? cardTotal : cashTotal;
+            let total = base - discountValue;
+            if(total < 0) total = 0;
+            document.getElementById('orderSubtotal').textContent = `R$ ${base.toFixed(2)}`;
+            document.getElementById('orderTotal').textContent = `R$ ${total.toFixed(2)}`;
+        }
+
+        async function applyCupom(){
+            const code=document.getElementById('cupomInput').value.trim().toUpperCase();
+            if(!code) return;
+            const msg=document.getElementById('cupomMsg');
+            const dr=document.getElementById('discountRow');
+            try {
+                const snap=await database.ref('cupons').orderByChild('code').equalTo(code).once('value');
+                const cupons=snap.val();
+                if(cupons){
+                    const cupom=Object.values(cupons)[0];
+                    const now=new Date();
+                    const expiry=cupom.expiry?new Date(cupom.expiry+'T23:59:59'):null;
+                    if(expiry && now>expiry){ msg.textContent='Cupom expirado!'; msg.style.display='block'; msg.style.color='#e94560'; return; }
+                    if(cupom.usedCount >= cupom.maxUses){ msg.textContent='Cupom esgotado!'; msg.style.display='block'; msg.style.color='#e94560'; return; }
+                    const pm=document.querySelector('input[name="payment"]:checked')?.value||'dinheiro';
+                    const isCard=pm==='cartao';
+                    if(isCard && !cupom.acceptCartao){ msg.textContent='Cupom não válido para cartão!'; msg.style.display='block'; msg.style.color='#e94560'; return; }
+                    if(!isCard && !cupom.acceptPix){ msg.textContent='Cupom não válido para esta forma de pagamento!'; msg.style.display='block'; msg.style.color='#e94560'; return; }
+                    appliedCupom=cupom;
+                    const base = isCard ? cardTotal : cashTotal;
+                    discountValue = base * (cupom.percentage / 100);
+                    dr.style.display='block';
+                    document.getElementById('discountAmount').textContent=`R$ ${discountValue.toFixed(2)}`;
+                    msg.textContent=`Cupom ${cupom.code} aplicado! -${cupom.percentage}%`;
+                    msg.style.display='block';
+                    msg.style.color='#4a6741';
+                    updateTotal();
+                } else {
+                    msg.textContent='Cupom inválido!';
+                    msg.style.display='block';
+                    msg.style.color='#e94560';
+                }
+            } catch(error) { console.error('Erro ao aplicar cupom:', error); }
+        }
+
+        function completeOrder(){
+            const name=document.getElementById('customerName').value.trim();
+            const email=document.getElementById('customerEmail').value.trim();
+            const phone=document.getElementById('customerPhone').value.trim();
+            const pm=document.querySelector('input[name="payment"]:checked')?.value||'dinheiro';
+            
+            if(!name||!phone){ alert('Preencha todos os campos'); return; }
+            if(!validateVariants()){ alert('Selecione todas as opções de tamanho e cor'); return; }
+            
+            let base = pm === 'cartao' ? cardTotal : cashTotal;
+            let total = base - discountValue;
+            if(total < 0) total = 0;
+            
+            document.getElementById('loadingOverlay').classList.add('active');
+            
+            setTimeout(() => {
+                const now=new Date();
+                let msg = `*NOVO PEDIDO - UANDRA ANDRADE*\n\n`;
+                msg += `*Data:* ${now.toLocaleDateString('pt-BR')}\n`;
+                msg += `*Hora:* ${now.toLocaleTimeString('pt-BR')}\n`;
+                msg += `*Cliente:* ${name}\n`;
+                msg += `*Email:* ${email}\n`;
+                msg += `*Telefone:* ${phone}\n`;
+                msg += `*Pagamento:* ${pm.toUpperCase()}\n\n`;
+                msg += `*ITENS:*\n`;
+                
+                cart.forEach(item => {
+                    const p = productDataCache[item.id];
+                    let price = getProductPrice(p, pm);
+                    let promoTag = '';
+                    if(p && p.promotion && p.promotion.start && p.promotion.end) {
+                        const nowTime = Date.now();
+                        const start = new Date(p.promotion.start).getTime();
+                        const end = new Date(p.promotion.end).getTime();
+                        if(nowTime >= start && nowTime <= end && (p.promotion.cashPrice > 0 || p.promotion.cardPrice > 0)) {
+                            promoTag = ' [PROMOÇÃO]';
+                        }
+                    }
+                    msg += `- ${p ? p.title : item.title}${promoTag}\n`;
+                    
+                    // SOMENTE O QUE FOI SELECIONADO - NADA DE LISTAS DE DISPONIVEIS
+                    if(item.selectedSize) msg += `  Tamanho: ${item.selectedSize}\n`;
+                    if(item.selectedColor) msg += `  Cor: ${item.selectedColor}\n`;
+                    msg += `  Preço: R$ ${price.toFixed(2)}\n\n`;
+                });
+                
+                if(appliedCupom) msg += `*Cupom:* ${appliedCupom.code} (-${appliedCupom.percentage}%)\n`;
+                msg += `*TOTAL:* R$ ${total.toFixed(2)}\n`;
+                msg += `\n*O valor do frete será calculado e informado pelo atendente.*`;
+                
+                const saleData={
+                    store:'store1',
+                    productTitle:cart.map(i => {
+                        const p = productDataCache[i.id];
+                        let title = p ? p.title : i.title;
+                        if(i.selectedSize) title += ` (${i.selectedSize})`;
+                        if(i.selectedColor) title += ` - ${i.selectedColor}`;
+                        return title;
+                    }).join(', '),
+                    total:total,
+                    payment:pm,
+                    customerName:name,
+                    customerEmail:email,
+                    customerPhone:phone,
+                    cupomCode:appliedCupom?.code||null,
+                    status:'pending',
+                    timestamp:Date.now(),
+                    date:now.toISOString().split('T')[0]
+                };
+                
+                database.ref('sales').push(saleData);
+                
+                if(appliedCupom){
+                    database.ref('cupons').orderByChild('code').equalTo(appliedCupom.code).once('value',(snap)=>{
+                        const d=snap.val();
+                        if(d){
+                            const cid=Object.keys(d)[0];
+                            database.ref(`cupons/${cid}/usedCount`).set((appliedCupom.usedCount||0)+1);
+                        }
+                    });
+                }
+                
+                localStorage.removeItem('cart');
+                window.open(`https://wa.me/5583988062223?text=${encodeURIComponent(msg)}`,'_blank');
+            }, 2000);
+        }
+        
+        loadOrderSummary();
+    </script>
+</body>
+</html>
