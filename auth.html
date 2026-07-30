@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --gold: #c8956c;
+            --gold-light: #d4a574;
+            --green: #3d5a3c;
+            --green-hover: #2f4630;
+            --white: #ffffff;
+            --bg: #f3f1ee;
+            --gray: #f8f9fa;
+            --border: #e0dcd5;
+            --text: #2d3436;
+            --shadow: 0 2px 15px rgba(0,0,0,0.03);
+            --radius: 18px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); }
+
+        .admin-header {
+            background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+            color: var(--primary); padding: 16px 28px; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 1px 20px rgba(0,0,0,0.03);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .admin-header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .admin-header h1 i { color: var(--gold); }
+
+        .admin-container { max-width: 1400px; margin: 25px auto; padding: 0 22px; }
+
+        .tab-nav {
+            display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap;
+            background: white; padding: 6px; border-radius: 35px; box-shadow: var(--shadow);
+        }
+        .tab-btn {
+            padding: 11px 20px; border: none; background: transparent; border-radius: 30px;
+            cursor: pointer; font-weight: 600; font-size: 12px; color: #888; transition: var(--transition);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tab-btn.active, .tab-btn:hover { background: var(--gold); color: white; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: white; border-radius: var(--radius); padding: 26px;
+            box-shadow: var(--shadow); margin-bottom: 18px; border: 1px solid #f0ede8;
+        }
+        .card h3 {
+            color: var(--primary); margin-bottom: 18px; font-size: 16px; font-weight: 700;
+            padding-bottom: 10px; border-bottom: 2px solid var(--gold); display: flex; align-items: center; gap: 8px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .form-group { margin-bottom: 13px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            display: block; font-weight: 600; font-size: 11px; color: var(--primary);
+            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%; padding: 11px 15px; border: 1.5px solid var(--border); border-radius: 14px;
+            font-size: 13px; transition: var(--transition); background: #fafaf8;
+        }
+        .form-group textarea { min-height: 90px; resize: vertical; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--gold); background: white; box-shadow: 0 4px 15px rgba(200,149,108,0.06);
+        }
+        .form-group input[type="color"] { width: 50px; height: 40px; padding: 4px; cursor: pointer; border-radius: 10px; }
+        .form-group input[type="checkbox"] { width: auto; margin-right: 6px; }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 30px; font-weight: 600;
+            cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;
+            transition: var(--transition); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .btn-primary { background: var(--green); color: white; }
+        .btn-primary:hover { background: var(--green-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(61,90,60,0.2); }
+        .btn-secondary { background: var(--gray); color: var(--primary); border: 1.5px solid var(--border); }
+        .btn-secondary:hover { background: #e8e8e8; }
+        .btn-danger { background: #e94560; color: white; }
+        .btn-danger:hover { background: #c62828; }
+        .btn-sm { padding: 7px 14px; font-size: 10px; }
+        .btn-gold { background: var(--gold); color: white; }
+        .btn-gold:hover { background: var(--gold-light); }
+        .btn-blue { background: #1565c0; color: white; }
+        .btn-blue:hover { background: #0d47a1; }
+        .btn-green { background: #2e7d32; color: white; }
+        .btn-green:hover { background: #1b5e20; }
+
+        .color-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .color-chip {
+            width: 34px; height: 34px; border-radius: 50%; border: 2px solid #e0dcd5;
+            cursor: pointer; position: relative; display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .color-chip:hover { transform: scale(1.1); }
+        .color-row { display: flex; gap: 10px; align-items: center; margin-bottom: 7px; }
+        .color-row input[type="text"] { flex: 1; }
+
+        .sizes-container { border: 1.5px solid var(--border); padding: 14px; border-radius: 14px; margin-top: 8px; background: #fafaf8; }
+        .size-tag {
+            display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
+            background: white; border-radius: 30px; margin: 4px; font-size: 12px; font-weight: 600;
+            border: 1.5px solid var(--border); transition: var(--transition);
+        }
+        .size-tag:hover { border-color: var(--gold); }
+        .size-tag button { background: none; border: none; color: #e94560; cursor: pointer; font-size: 14px; padding: 0 3px; }
+        .size-input-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        .size-input-row input { flex: 1; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 30px; font-size: 12px; }
+        .size-input-row input:focus { outline: none; border-color: var(--gold); }
+        .size-input-row button { flex-shrink: 0; }
+
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 13px 15px; border: 1px solid #f0ede8; border-radius: 14px;
+            margin-bottom: 8px; gap: 14px; transition: var(--transition); background: white;
+        }
+        .list-item:hover { background: #fafaf8; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .list-thumb { width: 50px; height: 65px; object-fit: cover; border-radius: 10px; background: #f5f5f5; flex-shrink: 0; }
+
+        .promo-section { background: #fdfaf7; border: 2px dashed var(--gold); border-radius: 14px; padding: 18px; margin-top: 15px; }
+        .promo-section h4 { color: var(--gold); font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .promo-row { display: flex; gap: 10px; align-items: center; }
+        .promo-row .form-group { flex: 1; margin-bottom: 0; }
+
+        .cupom-card {
+            background: #fdfaf7; border: 1px solid #f0e8df; border-radius: 16px;
+            padding: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .cupom-code { font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700; color: var(--green); letter-spacing: 2px; }
+
+        .order-status-badge {
+            display: inline-block; padding: 5px 12px; border-radius: 20px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+        }
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-confirmed { background: #e3f2fd; color: #1565c0; }
+        .status-sent { background: #f3e5f5; color: #7b1fa2; }
+        .status-delivered { background: #e8f5e9; color: #2e7d32; }
+
+        .tracking-info { background: #fafaf8; padding: 12px 15px; border-radius: 12px; margin-top: 8px; font-size: 12px; border: 1px solid #f0ede8; }
+
+        .measure-preview { margin-top: 8px; }
+        .measure-preview img { max-width: 200px; border-radius: 12px; border: 1px solid #f0ede8; }
+
+        .progress-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(243,241,238,0.85); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 5000;
+        }
+        .progress-overlay.active { display: flex; }
+        .progress-card {
+            background: white; padding: 35px; border-radius: 24px; text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.1); max-width: 380px; width: 90%;
+        }
+        .progress-card h4 { color: var(--primary); font-size: 15px; margin-bottom: 5px; }
+        .progress-bar { width: 100%; height: 6px; background: #f0ede8; border-radius: 3px; margin: 14px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--gold); transition: width 0.3s; width: 0%; border-radius: 3px; }
+        .progress-text { font-size: 12px; color: #888; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center; z-index: 4000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: white; border-radius: 24px; padding: 30px; max-width: 650px;
+            width: 92%; max-height: 85vh; overflow-y: auto; box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+            position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 12px; right: 12px; background: #f5f5f5; border: none;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 16px;
+            color: #666; display: flex; align-items: center; justify-content: center; transition: var(--transition);
+        }
+        .modal-close:hover { background: #e0e0e0; }
+
+        .suggestion-preview { display: flex; gap: 12px; align-items: center; padding: 12px; background: #fafaf8; border-radius: 14px; margin-bottom: 8px; border: 1px solid #f0ede8; }
+        .suggestion-preview img { width: 120px; height: 70px; object-fit: cover; border-radius: 10px; }
+
+        /* CAIXA - Analytics melhorado */
+        .caixa-filtros {
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+        }
+        .caixa-filtros input, .caixa-filtros select {
+            padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+            font-size: 12px; background: white; transition: var(--transition);
+        }
+        .caixa-filtros input:focus, .caixa-filtros select:focus {
+            outline: none; border-color: var(--gold);
+        }
+        .caixa-filtros input[type="text"] { min-width: 120px; }
+        .caixa-filtros .btn { padding: 9px 18px; font-size: 11px; }
+
+        .caixa-resumo {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px;
+        }
+        .caixa-resumo .item {
+            background: #f8f6f4; padding: 16px; border-radius: 12px; text-align: center;
+        }
+        .caixa-resumo .item .valor { font-size: 22px; font-weight: 700; color: var(--gold); }
+        .caixa-resumo .item .rotulo { font-size: 11px; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .caixa-resumo .item .valor.verde { color: var(--green); }
+        .caixa-resumo .item .valor.azul { color: #1565c0; }
+        .caixa-resumo .item .valor.laranja { color: #e65100; }
+
+        .venda-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 14px; border-bottom: 1px solid #f0ede8; cursor: pointer;
+            transition: var(--transition); border-radius: 8px;
+        }
+        .venda-item:hover { background: #fafaf8; }
+        .venda-item .info { flex: 1; }
+        .venda-item .info .nome { font-weight: 600; color: var(--primary); font-size: 13px; }
+        .venda-item .info .detalhe { font-size: 11px; color: #888; }
+        .venda-item .valor { font-weight: 700; color: var(--gold); font-size: 14px; }
+        .venda-item .acoes { display: flex; gap: 6px; margin-left: 10px; }
+
+        .detalhe-venda {
+            padding: 10px 0;
+        }
+        .detalhe-venda .linha {
+            display: flex; justify-content: space-between; padding: 6px 0;
+            font-size: 13px; border-bottom: 1px solid #f5f5f5;
+        }
+        .detalhe-venda .linha .label { color: #888; }
+        .detalhe-venda .linha .value { font-weight: 600; color: var(--primary); }
+
+        .historico-vendas {
+            max-height: 400px; overflow-y: auto;
+        }
+        .historico-vendas::-webkit-scrollbar { width: 4px; }
+        .historico-vendas::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
+
+        .btn-baixar {
+            background: #2e7d32; color: white; border: none; padding: 6px 14px;
+            border-radius: 20px; font-size: 10px; font-weight: 600; cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-baixar:hover { background: #1b5e20; }
+
+        /* LOGIN OVERLAY */
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(15px);
+            display: flex; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-box {
+            background: white; border-radius: 28px; padding: 40px 35px;
+            max-width: 400px; width: 92%; box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .login-box .logo { font-size: 32px; color: var(--gold); margin-bottom: 10px; }
+        .login-box h2 { color: var(--primary); font-size: 22px; margin-bottom: 6px; }
+        .login-box p { color: #888; font-size: 13px; margin-bottom: 24px; }
+        .login-box input {
+            width: 100%; padding: 14px 18px; border: 2px solid #e0dcd5; border-radius: 14px;
+            font-size: 16px; text-align: center; letter-spacing: 8px; font-weight: 600;
+            transition: var(--transition);
+        }
+        .login-box input:focus { outline: none; border-color: var(--gold); box-shadow: 0 6px 20px rgba(200,149,108,0.1); }
+        .login-box .btn-login {
+            width: 100%; padding: 14px; margin-top: 16px; background: var(--green);
+            color: white; border: none; border-radius: 14px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+        }
+        .login-box .btn-login:hover { background: var(--green-hover); transform: translateY(-2px); }
+        .login-box .erro { color: #e94560; font-size: 13px; margin-top: 12px; display: none; }
+        .login-box .erro.show { display: block; }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .caixa-resumo { grid-template-columns: 1fr 1fr; }
+            .caixa-filtros { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN OVERLAY -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="logo"><i class="fas fa-crown"></i></div>
+            <h2>Painel Administrativo</h2>
+            <p>Digite o código de acesso para continuar</p>
+            <input type="password" id="loginCode" maxlength="4" placeholder="* * * *" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <button class="btn-login" onclick="verificarLogin()">Acessar</button>
+            <div class="erro" id="loginErro">Código incorreto. Tente novamente.</div>
+        </div>
+    </div>
+
+    <header class="admin-header">
+        <h1><i class="fas fa-cog"></i> Painel Administrativo</h1>
+    </header>
+
+    <div class="admin-container">
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('products')"><i class="fas fa-box"></i> Produtos</button>
+            <button class="tab-btn" onclick="switchTab('orders')"><i class="fas fa-truck"></i> Pedidos</button>
+            <button class="tab-btn" onclick="switchTab('suggestions')"><i class="fas fa-image"></i> Banner</button>
+            <button class="tab-btn" onclick="switchTab('cupons')"><i class="fas fa-ticket-alt"></i> Cupons</button>
+            <button class="tab-btn" onclick="switchTab('categories')"><i class="fas fa-tags"></i> Categorias</button>
+            <button class="tab-btn" onclick="switchTab('partners')"><i class="fas fa-handshake"></i> Parceiras</button>
+            <button class="tab-btn" onclick="switchTab('users')"><i class="fas fa-users"></i> Usuarios</button>
+            <button class="tab-btn" onclick="switchTab('caixa')"><i class="fas fa-cash-register"></i> Caixa</button>
+            <button class="tab-btn" onclick="switchTab('historico')"><i class="fas fa-history"></i> Historico</button>
+        </div>
+
+        <div class="progress-overlay" id="progressOverlay">
+            <div class="progress-card">
+                <h4><i class="fas fa-sync-alt fa-spin"></i> Processando...</h4>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <p class="progress-text" id="progressText">Conectando ao servidor...</p>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="trackingModal">
+            <div class="modal-card">
+                <button class="modal-close" onclick="closeTrackingModal()"><i class="fas fa-times"></i></button>
+                <h3 style="color:var(--primary);margin-bottom:18px;font-size:17px;"><i class="fas fa-truck"></i> Adicionar Rastreio</h3>
+                <div id="trackingModalContent"></div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="detalheModal">
+            <div class="modal-card">
+                <button class="modal-close" onclick="closeDetalheModal()"><i class="fas fa-times"></i></button>
+                <h3 style="color:var(--primary);margin-bottom:18px;font-size:17px;"><i class="fas fa-file-invoice"></i> Detalhes do Pedido</h3>
+                <div id="detalheModalContent"></div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="usuarioModal">
+            <div class="modal-card">
+                <button class="modal-close" onclick="closeUsuarioModal()"><i class="fas fa-times"></i></button>
+                <h3 style="color:var(--primary);margin-bottom:18px;font-size:17px;"><i class="fas fa-user"></i> Detalhes do Usuario</h3>
+                <div id="usuarioModalContent"></div>
+            </div>
+        </div>
+
+        <!-- Aba Produtos -->
+        <div class="tab-content active" id="tab-products">
+            <div class="card">
+                <h3><i class="fas fa-plus-circle"></i> Cadastrar / Editar Produto</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Titulo</label><input type="text" id="productTitle" placeholder="Nome do produto"></div>
+                    <div class="form-group"><label>Categoria</label><select id="productCategory"><option value="">Selecione</option></select></div>
+                    <div class="form-group"><label>Preco a Vista (R$)</label><input type="number" id="basePrice" step="0.01" placeholder="0,00"></div>
+                    <div class="form-group"><label>Preco no Cartao (R$)</label><input type="number" id="cardPrice" step="0.01" placeholder="0,00"></div>
+                    <div class="form-group"><label>Maximo de Parcelas (cartao)</label><input type="number" id="maxInstallments" min="1" max="12" value="1"></div>
+                    <div class="form-group full"><label>Descricao</label><textarea id="productDescription" placeholder="Descreva o produto..."></textarea></div>
+
+                    <div class="form-group full">
+                        <label>Tamanhos Disponiveis (opcional)</label>
+                        <div class="sizes-container">
+                            <div id="sizesTags"><span style="color:#aaa;font-size:12px;">Nenhum tamanho adicionado</span></div>
+                            <div class="size-input-row">
+                                <input type="text" id="newSizeInput" placeholder="Digite o tamanho (ex: P, M, G, GG, XG, 38, 40...) e pressione Enter">
+                                <button class="btn btn-gold btn-sm" onclick="addSize()"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Cores Disponiveis (opcional)</label>
+                        <div id="colorsContainer">
+                            <div class="color-row">
+                                <input type="text" id="colorName0" placeholder="Nome da cor (ex: Vermelho)" style="flex:1;">
+                                <input type="color" id="colorHex0" value="#e94560" style="width:50px;height:38px;">
+                            </div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="addColor()" style="margin-top:8px;"><i class="fas fa-plus"></i> Adicionar Cor</button>
+                        <div class="color-list" id="colorPreview"></div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Tabela de Medidas (opcional - upload de imagem)</label>
+                        <input type="file" id="measureImage" accept="image/*" onchange="previewMeasure()">
+                        <div class="measure-preview" id="measurePreview"></div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="hasPromotion" onchange="togglePromotion()"> 
+                            <span>Este produto esta em PROMOCAO</span>
+                        </label>
+                        <div class="promo-section" id="promoSection" style="display:none;">
+                            <h4><i class="fas fa-fire"></i> Configuracao da Promocao</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Preco Promocional a Vista (R$)</label>
+                                    <input type="number" id="promoCashPrice" step="0.01" placeholder="Preco com desconto a vista">
+                                </div>
+                                <div class="form-group">
+                                    <label>Preco Promocional no Cartao (R$)</label>
+                                    <input type="number" id="promoCardPrice" step="0.01" placeholder="Preco com desconto no cartao">
+                                </div>
+                                <div class="form-group">
+                                    <label>Inicio da Promocao</label>
+                                    <input type="datetime-local" id="promoStart">
+                                </div>
+                                <div class="form-group">
+                                    <label>Fim da Promocao</label>
+                                    <input type="datetime-local" id="promoEnd">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>Imagens do Produto (ate 10)</label>
+                        <div style="border:2px dashed #e0dcd5;padding:22px;text-align:center;border-radius:14px;cursor:pointer;background:#fafaf8;" onclick="document.getElementById('imageUpload').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size:30px;color:var(--gold);"></i>
+                            <p style="font-size:11px;margin-top:5px;color:#888;">Clique para upload (Cloudinary)</p>
+                        </div>
+                        <input type="file" id="imageUpload" multiple accept="image/*" style="display:none" onchange="previewImages()">
+                        <div id="imagePreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+                    </div>
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="nationalDelivery" checked> Entrega Nacional</label></div>
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="freeShipping"> Frete Gratis</label></div>
+                    <div class="form-group"><label>Desconto (%)</label><input type="number" id="discountPercentage" min="0" max="100" value="0"></div>
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="applyDiscountToCard"> Aplicar desconto no cartao</label></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:18px;">
+                    <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> Salvar Produto</button>
+                    <button class="btn btn-secondary" onclick="clearProductForm()"><i class="fas fa-undo"></i> Limpar</button>
+                </div>
+            </div>
+            <div class="card"><h3><i class="fas fa-list"></i> Produtos Cadastrados</h3><div id="productList"></div></div>
+        </div>
+
+        <!-- Aba Pedidos -->
+        <div class="tab-content" id="tab-orders">
+            <div class="card">
+                <h3><i class="fas fa-truck"></i> Gerenciar Pedidos</h3>
+                <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+                    <select id="orderStatusFilter" onchange="loadOrders()" style="padding:10px 15px;border:1.5px solid var(--border);border-radius:30px;font-size:12px;background:white;">
+                        <option value="all">Todos os Status</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="confirmed">Confirmados</option>
+                        <option value="sent">Enviados</option>
+                        <option value="delivered">Entregues</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="loadOrders()"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+        </div>
+
+        <!-- Aba Banner -->
+        <div class="tab-content" id="tab-suggestions">
+            <div class="card">
+                <h3><i class="fas fa-image"></i> Gerenciar Banners (max 10)</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Titulo do Banner</label><input type="text" id="sugTitle" placeholder="Ex: Promocao de Verao"></div>
+                    <div class="form-group"><label>Descricao</label><input type="text" id="sugDesc" placeholder="Texto do banner"></div>
+                    <div class="form-group"><label>Texto do Botao (opcional)</label><input type="text" id="sugBtnText" placeholder="Ex: Comprar Agora"></div>
+                    <div class="form-group"><label>Link do Botao (opcional)</label><input type="text" id="sugLink" placeholder="https://..."></div>
+                    <div class="form-group full"><label>Ou Vincular a um Produto</label><select id="sugProductId"><option value="">Nenhum</option></select></div>
+                    <div class="form-group full">
+                        <label>Imagem de Fundo</label>
+                        <input type="file" id="sugImage" accept="image/*" onchange="previewSugImage()">
+                        <div id="sugImagePreview" style="margin-top:8px;"></div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSuggestion()"><i class="fas fa-save"></i> Salvar Banner</button>
+            </div>
+            <div class="card"><h3><i class="fas fa-list"></i> Banners Ativos</h3><div id="suggestionsList"></div></div>
+        </div>
+
+        <!-- Aba Cupons -->
+        <div class="tab-content" id="tab-cupons">
+            <div class="card">
+                <h3><i class="fas fa-ticket-alt"></i> Criar Cupom de Desconto</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Codigo do Cupom</label><input type="text" id="cupomCode" placeholder="Ex: VERAO20"></div>
+                    <div class="form-group"><label>Desconto (%)</label><input type="number" id="cupomPercent" min="1" max="100" value="10"></div>
+                    <div class="form-group"><label>Tipo</label><select id="cupomType" onchange="toggleCupomProduct()"><option value="all">Todos os produtos</option><option value="specific">Produto especifico</option></select></div>
+                    <div class="form-group" id="cupomProductGroup" style="display:none;"><label>Produto</label><select id="cupomProductId"><option value="">Selecione</option></select></div>
+                    <div class="form-group"><label>Validade</label><input type="date" id="cupomExpiry"></div>
+                    <div class="form-group"><label>Maximo de usos</label><input type="number" id="cupomMaxUses" min="1" value="100"></div>
+                    <div class="form-group full"><label>Pagamentos Aceitos</label><div style="display:flex;gap:20px;"><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="cupomPix" checked> Pix/Dinheiro/Boleto</label><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="cupomCartao" checked> Cartao</label></div></div>
+                </div>
+                <button class="btn btn-primary" onclick="saveCupom()"><i class="fas fa-save"></i> Criar Cupom</button>
+            </div>
+            <div class="card"><h3><i class="fas fa-list"></i> Cupons Ativos</h3><div id="cuponsList"></div></div>
+        </div>
+
+        <!-- Aba Categorias -->
+        <div class="tab-content" id="tab-categories">
+            <div class="card">
+                <h3><i class="fas fa-plus-circle"></i> Nova Categoria</h3>
+                <div style="display:flex;gap:10px;">
+                    <input type="text" id="newCategoryName" placeholder="Nome da categoria" style="flex:1;padding:11px 15px;border:1.5px solid var(--border);border-radius:14px;font-size:13px;">
+                    <button class="btn btn-primary" onclick="addCategory()"><i class="fas fa-plus"></i> Adicionar</button>
+                </div>
+            </div>
+            <div class="card"><h3><i class="fas fa-tags"></i> Categorias</h3><div id="categoryList"></div></div>
+        </div>
+
+        <!-- Aba Parceiros -->
+        <div class="tab-content" id="tab-partners">
+            <div class="card">
+                <h3><i class="fas fa-plus-circle"></i> Adicionar Loja Parceira</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Nome da Loja</label><input type="text" id="partnerName" placeholder="Nome"></div>
+                    <div class="form-group"><label>Link</label><input type="url" id="partnerUrl" placeholder="https://..."></div>
+                </div>
+                <button class="btn btn-primary" onclick="addPartner()"><i class="fas fa-plus"></i> Adicionar</button>
+            </div>
+            <div class="card"><h3><i class="fas fa-handshake"></i> Lojas Parceiras</h3><div id="partnerList"></div></div>
+        </div>
+
+        <!-- Aba Usuarios -->
+        <div class="tab-content" id="tab-users">
+            <div class="card"><h3><i class="fas fa-users"></i> Usuarios Cadastrados</h3><div id="usersList"></div></div>
+        </div>
+
+        <!-- Aba Caixa -->
+        <div class="tab-content" id="tab-caixa">
+            <div class="card">
+                <h3><i class="fas fa-cash-register"></i> Caixa - Vendas</h3>
+                <div class="caixa-filtros">
+                    <input type="text" id="filtroDataInicio" placeholder="DD/MM/AAAA" oninput="mascararData(this)" maxlength="10">
+                    <input type="text" id="filtroDataFim" placeholder="DD/MM/AAAA" oninput="mascararData(this)" maxlength="10">
+                    <select id="filtroPagamento" onchange="filtrarCaixa()">
+                        <option value="all">Todos os Pagamentos</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao">Cartao</option>
+                        <option value="boleto">Boleto</option>
+                        <option value="pix">Pix</option>
+                    </select>
+                    <select id="filtroMes" onchange="filtrarCaixa()">
+                        <option value="all">Todos os Meses</option>
+                        <option value="0">Janeiro</option>
+                        <option value="1">Fevereiro</option>
+                        <option value="2">Marco</option>
+                        <option value="3">Abril</option>
+                        <option value="4">Maio</option>
+                        <option value="5">Junho</option>
+                        <option value="6">Julho</option>
+                        <option value="7">Agosto</option>
+                        <option value="8">Setembro</option>
+                        <option value="9">Outubro</option>
+                        <option value="10">Novembro</option>
+                        <option value="11">Dezembro</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="filtrarCaixa()"><i class="fas fa-filter"></i> Filtrar</button>
+                    <button class="btn btn-secondary btn-sm" onclick="limparFiltrosCaixa()"><i class="fas fa-undo"></i> Limpar</button>
+                </div>
+
+                <div class="caixa-resumo" id="caixaResumo">
+                    <div class="item"><div class="valor" id="totalVendas">R$ 0,00</div><div class="rotulo">Total Vendas</div></div>
+                    <div class="item"><div class="valor verde" id="totalPedidos">0</div><div class="rotulo">Pedidos</div></div>
+                    <div class="item"><div class="valor azul" id="mediaVendas">R$ 0,00</div><div class="rotulo">Media por Venda</div></div>
+                    <div class="item"><div class="valor laranja" id="totalDinheiro">R$ 0,00</div><div class="rotulo">Dinheiro</div></div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                    <h4 style="font-size:14px;color:var(--primary);"><i class="fas fa-history"></i> Historico de Vendas</h4>
+                    <button class="btn btn-sm btn-green" onclick="baixarHistorico()"><i class="fas fa-download"></i> Baixar CSV</button>
+                </div>
+                <div class="historico-vendas" id="historicoVendas">
+                    <p style="color:#999;text-align:center;padding:20px;">Carregando vendas...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Historico -->
+        <div class="tab-content" id="tab-historico">
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Historico Completo</h3>
+                <div class="caixa-filtros">
+                    <input type="text" id="histDataInicio" placeholder="DD/MM/AAAA" oninput="mascararData(this)" maxlength="10">
+                    <input type="text" id="histDataFim" placeholder="DD/MM/AAAA" oninput="mascararData(this)" maxlength="10">
+                    <select id="histStatus" onchange="filtrarHistorico()">
+                        <option value="all">Todos os Status</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="confirmed">Confirmados</option>
+                        <option value="sent">Enviados</option>
+                        <option value="delivered">Entregues</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="filtrarHistorico()"><i class="fas fa-filter"></i> Filtrar</button>
+                    <button class="btn btn-secondary btn-sm" onclick="limparFiltrosHistorico()"><i class="fas fa-undo"></i> Limpar</button>
+                </div>
+                <div class="historico-vendas" id="historicoCompleto">
+                    <p style="color:#999;text-align:center;padding:20px;">Carregando historico...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        // ==================== LOGIN ====================
+        const SENHA_ADMIN = "0154";
+
+        function verificarLogin() {
+            const input = document.getElementById('loginCode');
+            const erro = document.getElementById('loginErro');
+            if (input.value === SENHA_ADMIN) {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                erro.classList.remove('show');
+            } else {
+                erro.classList.add('show');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        document.getElementById('loginCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verificarLogin();
+        });
+
+        // ==================== FIREBASE ====================
+        const firebaseConfig = { apiKey: "AIzaSyCVdKIP6jl-mLaqHNMW-IwK3pVkvhuSvSI", databaseURL: "https://san7-brasil-default-rtdb.firebaseio.com", projectId: "san7-brasil", authDomain: "san7-brasil.firebaseapp.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const CLOUD_NAME = "dzmjto17f";
+        const UPLOAD_PRESET = "ml_default";
+        const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+        let uploadedImages = [], editingProductId = null, sugImageUrl = '', currentTrackingSaleId = null, measureImageUrl = '', colorCounter = 1, currentSizes = [];
+        let todasVendas = [];
+
+        // ==================== MASCARAS ====================
+        function mascararData(input) {
+            let v = input.value.replace(/\D/g, '');
+            if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
+            if (v.length > 5) v = v.substring(0,5) + '/' + v.substring(5);
+            input.value = v;
+        }
+
+        function converterDataParaTimestamp(dataStr) {
+            if (!dataStr) return null;
+            const partes = dataStr.split('/');
+            if (partes.length !== 3) return null;
+            const d = new Date(partes[2], partes[1]-1, partes[0]);
+            return d.getTime();
+        }
+
+        // ==================== TABS ====================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const btn = document.querySelector(`[onclick="switchTab('${tabName}')"]`); if (btn) btn.classList.add('active');
+            const tab = document.getElementById(`tab-${tabName}`); if (tab) tab.classList.add('active');
+            if (tabName === 'products') loadProducts();
+            if (tabName === 'orders') loadOrders();
+            if (tabName === 'suggestions') loadSuggestions();
+            if (tabName === 'cupons') loadCupons();
+            if (tabName === 'categories') loadCategories();
+            if (tabName === 'partners') loadPartners();
+            if (tabName === 'users') loadUsers();
+            if (tabName === 'caixa') carregarCaixa();
+            if (tabName === 'historico') carregarHistorico();
+        }
+
+        function togglePromotion() {
+            document.getElementById('promoSection').style.display = document.getElementById('hasPromotion').checked ? 'block' : 'none';
+        }
+
+        function showProgress(msg) { document.getElementById('progressOverlay').classList.add('active'); document.getElementById('progressText').textContent = msg || 'Processando...'; const fill = document.getElementById('progressFill'); fill.style.width = '0%'; let w = 0; const interval = setInterval(() => { w += Math.random() * 20; if (w > 90) w = 90; fill.style.width = w + '%'; }, 200); return interval; }
+        function hideProgress(interval) { clearInterval(interval); document.getElementById('progressFill').style.width = '100%'; document.getElementById('progressText').textContent = 'Concluido!'; setTimeout(() => { document.getElementById('progressOverlay').classList.remove('active'); }, 600); }
+
+        // ==================== TAMANHOS ====================
+        function addSize() { const input = document.getElementById('newSizeInput'); const size = input.value.trim().toUpperCase(); if (!size) return; if (currentSizes.includes(size)) { alert('Tamanho ja adicionado!'); return; } currentSizes.push(size); input.value = ''; renderSizes(); }
+        function removeSize(size) { currentSizes = currentSizes.filter(s => s !== size); renderSizes(); }
+        function renderSizes() { const container = document.getElementById('sizesTags'); if (currentSizes.length === 0) { container.innerHTML = '<span style="color:#aaa;font-size:12px;">Nenhum tamanho adicionado</span>'; } else { container.innerHTML = currentSizes.map(s => `<span class="size-tag">${s} <button onclick="removeSize('${s}')">&times;</button></span>`).join(''); } }
+        document.getElementById('newSizeInput')?.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); addSize(); } });
+
+        // ==================== CORES ====================
+        function addColor(name = '', hex = '#c8956c') { const container = document.getElementById('colorsContainer'); const row = document.createElement('div'); row.className = 'color-row'; row.innerHTML = `<input type="text" id="colorName${colorCounter}" placeholder="Nome da cor" value="${name}" style="flex:1;"><input type="color" id="colorHex${colorCounter}" value="${hex}" style="width:50px;height:38px;"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove();updateColorPreview();"><i class="fas fa-times"></i></button>`; container.appendChild(row); colorCounter++; updateColorPreview(); }
+        function updateColorPreview() { const preview = document.getElementById('colorPreview'); const rows = document.querySelectorAll('#colorsContainer .color-row'); preview.innerHTML = ''; rows.forEach(row => { const name = row.querySelector('input[type="text"]').value || 'Cor'; const hex = row.querySelector('input[type="color"]').value; preview.innerHTML += `<div class="color-chip" style="background:${hex};" title="${name}"><span style="font-size:8px;color:#fff;text-shadow:0 0 2px #000;">${name.charAt(0)}</span></div>`; }); }
+        function getProductColors() { const colors = []; document.querySelectorAll('#colorsContainer .color-row').forEach(row => { const name = row.querySelector('input[type="text"]').value.trim(); const hex = row.querySelector('input[type="color"]').value; if (name) colors.push({ name, hex }); }); return colors; }
+        function setProductColors(colors) { const container = document.getElementById('colorsContainer'); container.innerHTML = ''; colorCounter = 0; if (colors && colors.length > 0) { colors.forEach(c => { colorCounter++; container.innerHTML += `<div class="color-row"><input type="text" id="colorName${colorCounter}" value="${c.name||''}" style="flex:1;"><input type="color" id="colorHex${colorCounter}" value="${c.hex||'#c8956c'}" style="width:50px;height:38px;"><button class="btn btn-danger btn-sm" onclick="this.parentElement.remove();updateColorPreview();"><i class="fas fa-times"></i></button></div>`; }); } else { colorCounter++; container.innerHTML = `<div class="color-row"><input type="text" id="colorName0" placeholder="Nome da cor" style="flex:1;"><input type="color" id="colorHex0" value="#e94560" style="width:50px;height:38px;"></div>`; } updateColorPreview(); }
+
+        // ==================== MEDIDAS ====================
+        function previewMeasure() { const file = document.getElementById('measureImage').files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => { document.getElementById('measurePreview').innerHTML = `<img src="${e.target.result}" style="max-width:200px;border-radius:12px;">`; }; reader.readAsDataURL(file); } }
+        async function uploadToCloudinary(file) { const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET); try { const r = await fetch(CLOUDINARY_URL, { method: 'POST', body: fd }); const d = await r.json(); return d.secure_url || null; } catch (e) { return null; } }
+        function previewImages() { const files = document.getElementById('imageUpload').files; const div = document.getElementById('imagePreviews'); div.innerHTML = ''; for (let i = 0; i < Math.min(files.length, 10); i++) { const reader = new FileReader(); reader.onload = (e) => { const img = document.createElement('img'); img.src = e.target.result; img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:10px;'; div.appendChild(img); }; reader.readAsDataURL(files[i]); } }
+        async function uploadImages() { const files = document.getElementById('imageUpload').files; const images = []; for (let i = 0; i < Math.min(files.length, 10); i++) { const url = await uploadToCloudinary(files[i]); if (url) images.push(url); } return images; }
+
+        // ==================== PRODUTOS ====================
+        async function saveProduct() {
+            const title = document.getElementById('productTitle').value.trim(); if (!title) { alert('Titulo obrigatorio!'); return; }
+            const interval = showProgress('Salvando produto...');
+            let images = uploadedImages; if (document.getElementById('imageUpload').files.length > 0) { images = await uploadImages(); uploadedImages = images; }
+            if (editingProductId && images.length === 0) { const s = await database.ref(`products/${editingProductId}`).once('value'); images = s.val()?.images || []; }
+            let measureImg = measureImageUrl; const measureFile = document.getElementById('measureImage').files[0]; if (measureFile) { const url = await uploadToCloudinary(measureFile); if (url) measureImg = url; }
+            if (editingProductId && !measureFile) { const s = await database.ref(`products/${editingProductId}`).once('value'); measureImg = s.val()?.measureImage || ''; }
+            const colors = getProductColors();
+            
+            const hasPromotion = document.getElementById('hasPromotion').checked;
+            let promotionData = null;
+            if (hasPromotion) {
+                const promoCash = parseFloat(document.getElementById('promoCashPrice').value) || 0;
+                const promoCard = parseFloat(document.getElementById('promoCardPrice').value) || 0;
+                const promoStart = document.getElementById('promoStart').value;
+                const promoEnd = document.getElementById('promoEnd').value;
+                if (promoCash > 0 || promoCard > 0) {
+                    promotionData = {
+                        cashPrice: promoCash,
+                        cardPrice: promoCard,
+                        start: promoStart ? new Date(promoStart).toISOString() : null,
+                        end: promoEnd ? new Date(promoEnd).toISOString() : null,
+                        active: true
+                    };
+                }
+            }
+            
+            const data = {
+                title, description: document.getElementById('productDescription').value.trim(),
+                category: document.getElementById('productCategory').value,
+                basePrice: parseFloat(document.getElementById('basePrice').value) || 0,
+                cardPrice: parseFloat(document.getElementById('cardPrice').value) || 0,
+                maxInstallments: parseInt(document.getElementById('maxInstallments').value) || 1,
+                sizes: currentSizes.length > 0 ? currentSizes : null,
+                colors: colors.length > 0 ? colors : null,
+                measureImage: measureImg || null,
+                promotion: promotionData,
+                images, nationalDelivery: document.getElementById('nationalDelivery').checked,
+                freeShipping: document.getElementById('freeShipping').checked,
+                discountCoupon: parseFloat(document.getElementById('discountPercentage').value) > 0 ? { percentage: parseFloat(document.getElementById('discountPercentage').value), applyToCard: document.getElementById('applyDiscountToCard').checked } : null,
+                clicks: 0, createdAt: Date.now()
+            };
+            if (editingProductId) { const es = await database.ref(`products/${editingProductId}`).once('value'); data.clicks = es.val()?.clicks || 0; data.createdAt = es.val()?.createdAt || Date.now(); await database.ref(`products/${editingProductId}`).update(data); } else { await database.ref('products').push(data); }
+            hideProgress(interval); clearProductForm(); loadProducts(); alert('Produto salvo com sucesso!');
+        }
+
+        function clearProductForm() {
+            document.getElementById('productTitle').value = ''; document.getElementById('productDescription').value = '';
+            document.getElementById('basePrice').value = ''; document.getElementById('cardPrice').value = '';
+            document.getElementById('maxInstallments').value = '1';
+            document.getElementById('imageUpload').value = ''; document.getElementById('imagePreviews').innerHTML = '';
+            document.getElementById('measureImage').value = ''; document.getElementById('measurePreview').innerHTML = '';
+            document.getElementById('discountPercentage').value = '0';
+            document.getElementById('hasPromotion').checked = false; document.getElementById('promoSection').style.display = 'none';
+            document.getElementById('promoCashPrice').value = ''; document.getElementById('promoCardPrice').value = '';
+            document.getElementById('promoStart').value = ''; document.getElementById('promoEnd').value = '';
+            currentSizes = []; renderSizes(); setProductColors([]); uploadedImages = []; measureImageUrl = ''; editingProductId = null;
+        }
+
+        function loadProducts() { database.ref('products').on('value', (snap) => { const products = snap.val(); const div = document.getElementById('productList'); div.innerHTML = ''; if (products) Object.entries(products).forEach(([id, p]) => { const img = p.images?.[0] || 'https://via.placeholder.com/50x65/f5f5f5/c8956c'; const colorCount = p.colors ? p.colors.length : 0; const sizeCount = p.sizes ? p.sizes.length : 0; const hasPromo = p.promotion && p.promotion.cashPrice > 0; div.innerHTML += `<div class="list-item"><img src="${img}" class="list-thumb" onerror="this.src='https://via.placeholder.com/50x65'"><div style="flex:1;"><strong>${p.title}</strong> ${hasPromo?'<span style="background:#ff8c00;color:white;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;">PROMOCAO</span>':''}<br><small>Vista: R$ ${(p.basePrice||0).toFixed(2)} | Cartao: R$ ${(p.cardPrice||0).toFixed(2)} | Parcelas: ${p.maxInstallments||1}x | Cores: ${colorCount} | Tamanhos: ${sizeCount}</small></div><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="editProduct('${id}')"><i class="fas fa-edit"></i></button><button class="btn btn-danger btn-sm" onclick="deleteProduct('${id}')"><i class="fas fa-trash"></i></button></div></div>`; }); loadCategoryOptions(); loadProductSelects(); }); }
+
+        function editProduct(id) { database.ref(`products/${id}`).once('value', (snap) => { const p = snap.val(); if (!p) return; editingProductId = id; document.getElementById('productTitle').value = p.title || ''; document.getElementById('productDescription').value = p.description || ''; document.getElementById('productCategory').value = p.category || ''; document.getElementById('basePrice').value = p.basePrice || 0; document.getElementById('cardPrice').value = p.cardPrice || 0; document.getElementById('maxInstallments').value = p.maxInstallments || 1; document.getElementById('nationalDelivery').checked = p.nationalDelivery !== false; document.getElementById('freeShipping').checked = p.freeShipping || false; document.getElementById('discountPercentage').value = p.discountCoupon?.percentage || '0'; document.getElementById('applyDiscountToCard').checked = p.discountCoupon?.applyToCard || false; setProductColors(p.colors || []); currentSizes = p.sizes || []; renderSizes(); measureImageUrl = p.measureImage || ''; document.getElementById('measurePreview').innerHTML = p.measureImage ? `<img src="${p.measureImage}" style="max-width:200px;border-radius:12px;">` : '';
+            if (p.promotion) { document.getElementById('hasPromotion').checked = true; document.getElementById('promoSection').style.display = 'block'; document.getElementById('promoCashPrice').value = p.promotion.cashPrice || ''; document.getElementById('promoCardPrice').value = p.promotion.cardPrice || ''; document.getElementById('promoStart').value = p.promotion.start ? new Date(p.promotion.start).toISOString().slice(0,16) : ''; document.getElementById('promoEnd').value = p.promotion.end ? new Date(p.promotion.end).toISOString().slice(0,16) : ''; } else { document.getElementById('hasPromotion').checked = false; document.getElementById('promoSection').style.display = 'none'; }
+            uploadedImages = p.images || []; document.getElementById('imagePreviews').innerHTML = uploadedImages.map(img => `<img src="${img}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;">`).join(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }); }
+        function deleteProduct(id) { if (confirm('Excluir este produto?')) database.ref(`products/${id}`).remove(); }
+
+        function loadCategoryOptions() { database.ref('categories').on('value', (snap) => { const cats = snap.val(); const sel = document.getElementById('productCategory'); const cv = sel.value; sel.innerHTML = '<option value="">Selecione</option>'; if (cats) Object.entries(cats).forEach(([id, c]) => sel.innerHTML += `<option value="${c.name}">${c.name}</option>`); sel.value = cv; }); }
+        function loadProductSelects() { database.ref('products').once('value', (snap) => { const products = snap.val(); ['sugProductId', 'cupomProductId'].forEach(selId => { const sel = document.getElementById(selId); if (!sel) return; const cv = sel.value; sel.innerHTML = '<option value="">Nenhum</option>'; if (products) Object.entries(products).forEach(([id, p]) => { if (!p.isPromotion) sel.innerHTML += `<option value="${id}">${p.title}</option>`; }); sel.value = cv; }); }); }
+
+        // ==================== PEDIDOS ====================
+        function loadOrders() { const statusFilter = document.getElementById('orderStatusFilter')?.value || 'all'; database.ref('sales').orderByChild('timestamp').limitToLast(100).on('value', (snap) => { const sales = snap.val(); const div = document.getElementById('ordersList'); div.innerHTML = ''; if (sales) { const arr = Object.entries(sales).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0)); const filtered = statusFilter === 'all' ? arr : arr.filter(([id, s]) => (s.status || 'pending') === statusFilter); if (filtered.length === 0) { div.innerHTML = '<p style="color:#999;text-align:center;padding:25px;">Nenhum pedido encontrado.</p>'; return; } filtered.forEach(([id, sale]) => { const date = new Date(sale.timestamp || Date.now()); const status = sale.status || 'pending'; const labels = { pending: 'Pendente', confirmed: 'Confirmado', sent: 'Enviado', delivered: 'Entregue', cancelled: 'Cancelado' }; div.innerHTML += `<div class="list-item"><div style="flex:1;cursor:pointer;" onclick="verDetalhePedido('${id}')"><strong>${sale.customerName || 'Cliente'}</strong> - ${sale.productTitle || 'Produto'}<br><small>${date.toLocaleString('pt-BR')} | ${sale.payment?.toUpperCase() || 'N/A'} | R$ ${(sale.total||0).toFixed(2)}</small><br><small>Tel: ${sale.customerPhone || 'N/A'} | Email: ${sale.customerEmail || 'N/A'}</small><span class="order-status-badge status-${status}">${labels[status]}</span>${sale.trackingCode ? `<div class="tracking-info"><i class="fas fa-truck"></i> ${sale.carrier||'Transportadora'} | Codigo: <strong>${sale.trackingCode}</strong> | Prazo: ${sale.deliveryStart||'?'} a ${sale.deliveryEnd||'?'}</div>` : ''}</div><div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">${status === 'pending' ? `<button class="btn btn-blue btn-sm" onclick="confirmOrder('${id}')"><i class="fas fa-check"></i> Confirmar</button>` : ''}${status === 'confirmed' || status === 'pending' ? `<button class="btn btn-gold btn-sm" onclick="openTrackingModal('${id}')"><i class="fas fa-truck"></i> Rastreio</button>` : ''}${status === 'sent' ? `<button class="btn btn-green btn-sm" onclick="markDelivered('${id}')"><i class="fas fa-box"></i> Entregue</button>` : ''}<button class="btn btn-danger btn-sm" onclick="excluirPedido('${id}')"><i class="fas fa-trash"></i></button></div></div>`; }); } else { div.innerHTML = '<p style="color:#999;text-align:center;padding:25px;">Nenhum pedido.</p>'; } }); }
+
+        function excluirPedido(id) { if (confirm('Excluir este pedido permanentemente?')) { database.ref(`sales/${id}`).remove(); loadOrders(); } }
+
+        function verDetalhePedido(id) {
+            database.ref(`sales/${id}`).once('value', (snap) => {
+                const sale = snap.val();
+                if (!sale) return;
+                const date = new Date(sale.timestamp || Date.now());
+                const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', sent: 'Enviado', delivered: 'Entregue' };
+                const modal = document.getElementById('detalheModal');
+                const content = document.getElementById('detalheModalContent');
+                content.innerHTML = `
+                    <div class="detalhe-venda">
+                        <div class="linha"><span class="label">Cliente</span><span class="value">${sale.customerName || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Email</span><span class="value">${sale.customerEmail || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Telefone</span><span class="value">${sale.customerPhone || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Endereco</span><span class="value">${sale.customerAddress || 'Nao informado'}</span></div>
+                        <div class="linha"><span class="label">Produto</span><span class="value">${sale.productTitle || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Total</span><span class="value">R$ ${(sale.total || 0).toFixed(2)}</span></div>
+                        <div class="linha"><span class="label">Pagamento</span><span class="value">${(sale.payment || 'N/A').toUpperCase()}</span></div>
+                        <div class="linha"><span class="label">Data</span><span class="value">${date.toLocaleString('pt-BR')}</span></div>
+                        <div class="linha"><span class="label">Status</span><span class="value">${statusLabels[sale.status] || 'Pendente'}</span></div>
+                        ${sale.trackingCode ? `<div class="linha"><span class="label">Rastreio</span><span class="value">${sale.trackingCode} (${sale.carrier || 'N/A'})</span></div>` : ''}
+                        ${sale.deliveryStart ? `<div class="linha"><span class="label">Prazo</span><span class="value">${sale.deliveryStart || '?'} a ${sale.deliveryEnd || '?'}</span></div>` : ''}
+                        ${sale.observacao ? `<div class="linha"><span class="label">Observacao</span><span class="value">${sale.observacao}</span></div>` : ''}
+                        ${sale.deliveryDate ? `<div class="linha"><span class="label">Entregue em</span><span class="value">${sale.deliveryDate}</span></div>` : ''}
+                    </div>
+                `;
+                modal.classList.add('active');
+            });
+        }
+
+        function closeDetalheModal() { document.getElementById('detalheModal').classList.remove('active'); }
+
+        function openTrackingModal(saleId) { currentTrackingSaleId = saleId; database.ref(`sales/${saleId}`).once('value', (snap) => { const sale = snap.val() || {}; document.getElementById('trackingModalContent').innerHTML = `<div class="form-group"><label>Transportadora</label><input type="text" id="trackingCarrier" value="${sale.carrier||''}" placeholder="Ex: Correios"></div><div class="form-group"><label>Codigo de Rastreio</label><input type="text" id="trackingCode" value="${sale.trackingCode||''}" placeholder="Ex: AB123456789BR"></div><div style="display:flex;gap:10px;"><div class="form-group" style="flex:1;"><label>Inicio do Prazo</label><input type="date" id="trackingStart" value="${sale.deliveryStart||''}"></div><div class="form-group" style="flex:1;"><label>Fim do Prazo</label><input type="date" id="trackingEnd" value="${sale.deliveryEnd||''}"></div></div><button class="btn btn-primary" onclick="saveTracking()" style="width:100%;margin-top:12px;"><i class="fas fa-save"></i> Salvar Rastreio e Enviar</button>`; document.getElementById('trackingModal').classList.add('active'); }); }
+        async function saveTracking() { const carrier = document.getElementById('trackingCarrier').value.trim(), code = document.getElementById('trackingCode').value.trim(), start = document.getElementById('trackingStart').value, end = document.getElementById('trackingEnd').value; if (!carrier || !code) { alert('Preencha transportadora e codigo!'); return; } await database.ref(`sales/${currentTrackingSaleId}`).update({ carrier, trackingCode: code, deliveryStart: start, deliveryEnd: end, status: 'sent', sentAt: Date.now() }); closeTrackingModal(); loadOrders(); alert('Rastreio salvo e pedido enviado!'); }
+        function closeTrackingModal() { document.getElementById('trackingModal').classList.remove('active'); currentTrackingSaleId = null; }
+        async function confirmOrder(saleId) { if (confirm('Confirmar este pedido?')) { await database.ref(`sales/${saleId}`).update({ status: 'confirmed', confirmedAt: Date.now() }); loadOrders(); } }
+        async function markDelivered(saleId) { const data = prompt('Data de entrega (DD/MM/AAAA) ou deixe em branco para agora:'); if (data !== null) { const deliveryDate = data || new Date().toLocaleDateString('pt-BR'); await database.ref(`sales/${saleId}`).update({ status: 'delivered', deliveredAt: Date.now(), deliveryDate: deliveryDate }); loadOrders(); } }
+
+        // ==================== USUARIOS ====================
+        function loadUsers() { database.ref('users').on('value', (snap) => { const users = snap.val(); const div = document.getElementById('usersList'); div.innerHTML = ''; if (users) Object.entries(users).forEach(([id, u]) => { const avatar = u.photoURL ? `<img src="${u.photoURL}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);">` : '<div style="width:42px;height:42px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:var(--gold);border:2px solid var(--gold);"><i class="fas fa-user"></i></div>'; div.innerHTML += `<div class="list-item" style="cursor:pointer;" onclick="verDetalheUsuario('${id}')">${avatar}<div style="flex:1;"><strong>${u.name}</strong><br><small>${u.email} | ${u.phone||'N/A'} | CPF: ${u.cpf||'N/A'}</small><br><small style="color:#888;">${u.address||'Endereco nao informado'}</small></div></div>`; }); }); }
+
+        function verDetalheUsuario(id) {
+            database.ref(`users/${id}`).once('value', (snap) => {
+                const u = snap.val();
+                if (!u) return;
+                const modal = document.getElementById('usuarioModal');
+                const content = document.getElementById('usuarioModalContent');
+                const avatar = u.photoURL ? `<img src="${u.photoURL}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);">` : '<div style="width:60px;height:60px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--gold);"><i class="fas fa-user"></i></div>';
+                content.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+                        ${avatar}
+                        <div><h4 style="font-size:18px;color:var(--primary);">${u.name || 'Usuario'}</h4></div>
+                    </div>
+                    <div class="detalhe-venda">
+                        <div class="linha"><span class="label">Email</span><span class="value">${u.email || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Telefone</span><span class="value">${u.phone || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">CPF</span><span class="value">${u.cpf || 'N/A'}</span></div>
+                        <div class="linha"><span class="label">Endereco</span><span class="value">${u.address || 'Nao informado'}</span></div>
+                        <div class="linha"><span class="label">Data Cadastro</span><span class="value">${u.createdAt ? new Date(u.createdAt).toLocaleString('pt-BR') : 'N/A'}</span></div>
+                        ${u.ticketId ? `<div class="linha"><span class="label">ID Ticket</span><span class="value">${u.ticketId}</span></div>` : ''}
+                    </div>
+                    <div style="margin-top:16px;display:flex;gap:8px;">
+                        <button class="btn btn-danger btn-sm" onclick="excluirUsuario('${id}')"><i class="fas fa-trash"></i> Excluir Usuario</button>
+                        <button class="btn btn-secondary btn-sm" onclick="closeUsuarioModal()">Fechar</button>
+                    </div>
+                `;
+                modal.classList.add('active');
+            });
+        }
+
+        function excluirUsuario(id) { if (confirm('Excluir este usuario permanentemente?')) { database.ref(`users/${id}`).remove(); closeUsuarioModal(); loadUsers(); } }
+        function closeUsuarioModal() { document.getElementById('usuarioModal').classList.remove('active'); }
+
+        // ==================== BANNERS ====================
+        function previewSugImage() { const file = document.getElementById('sugImage').files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => { document.getElementById('sugImagePreview').innerHTML = `<img src="${e.target.result}" style="width:180px;height:100px;object-fit:cover;border-radius:10px;">`; }; reader.readAsDataURL(file); } }
+        async function saveSuggestion() { const title = document.getElementById('sugTitle').value.trim(); if (!title) { alert('Titulo obrigatorio!'); return; } const s = await database.ref('suggestions').once('value'); if (Object.keys(s.val() || {}).length >= 10) { alert('Maximo de 10 banners!'); return; } let imgUrl = sugImageUrl; const file = document.getElementById('sugImage').files[0]; if (file) { const url = await uploadToCloudinary(file); if (url) imgUrl = url; } await database.ref('suggestions').push({ title, description: document.getElementById('sugDesc').value.trim(), buttonText: document.getElementById('sugBtnText').value.trim(), link: document.getElementById('sugLink').value.trim(), productId: document.getElementById('sugProductId').value, image: imgUrl }); document.getElementById('sugTitle').value = ''; document.getElementById('sugDesc').value = ''; document.getElementById('sugBtnText').value = ''; document.getElementById('sugLink').value = ''; document.getElementById('sugImage').value = ''; document.getElementById('sugImagePreview').innerHTML = ''; sugImageUrl = ''; loadSuggestions(); alert('Banner salvo!'); }
+        function loadSuggestions() { database.ref('suggestions').on('value', (snap) => { const suggestions = snap.val(); const div = document.getElementById('suggestionsList'); div.innerHTML = ''; if (suggestions) Object.entries(suggestions).forEach(([id, s]) => { const img = s.image ? `<img src="${s.image}" style="width:120px;height:70px;object-fit:cover;border-radius:10px;">` : '<div style="width:120px;height:70px;background:#f5f5f5;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa;">Sem imagem</div>'; div.innerHTML += `<div class="suggestion-preview">${img}<div style="flex:1;"><strong>${s.title}</strong><br><small>${s.description||''} ${s.buttonText?'| Botao: '+s.buttonText:''}</small></div><button class="btn btn-danger btn-sm" onclick="deleteSuggestion('${id}')"><i class="fas fa-trash"></i></button></div>`; }); }); }
+        function deleteSuggestion(id) { if (confirm('Excluir banner?')) database.ref(`suggestions/${id}`).remove(); }
+
+        // ==================== CUPONS ====================
+        function toggleCupomProduct() { document.getElementById('cupomProductGroup').style.display = document.getElementById('cupomType').value === 'specific' ? 'block' : 'none'; }
+        async function saveCupom() { const code = document.getElementById('cupomCode').value.trim().toUpperCase(); if (!code) { alert('Codigo do cupom obrigatorio!'); return; } await database.ref('cupons').push({ code, percentage: parseFloat(document.getElementById('cupomPercent').value) || 10, type: document.getElementById('cupomType').value, productId: document.getElementById('cupomType').value === 'specific' ? document.getElementById('cupomProductId').value : null, expiry: document.getElementById('cupomExpiry').value, maxUses: parseInt(document.getElementById('cupomMaxUses').value) || 100, usedCount: 0, acceptPix: document.getElementById('cupomPix').checked, acceptCartao: document.getElementById('cupomCartao').checked, createdAt: Date.now() }); document.getElementById('cupomCode').value = ''; document.getElementById('cupomExpiry').value = ''; loadCupons(); alert('Cupom criado com sucesso!'); }
+        function loadCupons() { database.ref('cupons').on('value', (snap) => { const cupons = snap.val(); const div = document.getElementById('cuponsList'); div.innerHTML = ''; if (cupons) Object.entries(cupons).forEach(([id, c]) => { div.innerHTML += `<div class="cupom-card"><div><span class="cupom-code">${c.code}</span> - ${c.percentage}% OFF<br><small>Tipo: ${c.type==='all'?'Todos':'Especifico'} | Usos: ${c.usedCount||0}/${c.maxUses} | Validade: ${c.expiry||'N/A'}</small></div><button class="btn btn-danger btn-sm" onclick="deleteCupom('${id}')"><i class="fas fa-trash"></i></button></div>`; }); }); }
+        function deleteCupom(id) { if (confirm('Excluir cupom?')) database.ref(`cupons/${id}`).remove(); }
+
+        // ==================== CATEGORIAS ====================
+        function addCategory() { const n = document.getElementById('newCategoryName').value.trim(); if (!n) return; database.ref('categories').push({ name: n }).then(() => { document.getElementById('newCategoryName').value = ''; loadCategories(); }); }
+        function loadCategories() { database.ref('categories').on('value', (snap) => { const cats = snap.val(); const div = document.getElementById('categoryList'); div.innerHTML = ''; if (cats) Object.entries(cats).forEach(([id, c]) => div.innerHTML += `<span style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fafaf8;border-radius:25px;margin:4px;font-size:11px;border:1px solid #f0ede8;">${c.name} <button onclick="deleteCategory('${id}')" style="background:none;border:none;color:#e94560;cursor:pointer;font-weight:700;font-size:14px;">&times;</button></span>`); }); }
+        function deleteCategory(id) { if (confirm('Excluir categoria?')) database.ref(`categories/${id}`).remove(); }
+
+        // ==================== PARCEIRAS ====================
+        function addPartner() { const n = document.getElementById('partnerName').value.trim(), u = document.getElementById('partnerUrl').value.trim(); if (!n||!u) return; database.ref('partnerLinks').push({ name: n, url: u }).then(() => { document.getElementById('partnerName').value = ''; document.getElementById('partnerUrl').value = ''; loadPartners(); }); }
+        function loadPartners() { database.ref('partnerLinks').on('value', (snap) => { const links = snap.val(); const div = document.getElementById('partnerList'); div.innerHTML = ''; if (links) Object.entries(links).forEach(([id, l]) => div.innerHTML += `<div class="list-item"><div><strong>${l.name}</strong><br><small>${l.url}</small></div><button class="btn btn-danger btn-sm" onclick="deletePartner('${id}')"><i class="fas fa-trash"></i></button></div>`); }); }
+        function deletePartner(id) { if (confirm('Excluir loja parceira?')) database.ref(`partnerLinks/${id}`).remove(); }
+
+        // ==================== CAIXA ====================
+        function carregarCaixa() {
+            database.ref('sales').orderByChild('timestamp').once('value', (snap) => {
+                const sales = snap.val();
+                todasVendas = [];
+                if (sales) {
+                    Object.entries(sales).forEach(([id, s]) => {
+                        todasVendas.push({ id, ...s });
+                    });
+                    todasVendas.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                }
+                filtrarCaixa();
+            });
+        }
+
+        function filtrarCaixa() {
+            const dataInicio = document.getElementById('filtroDataInicio').value;
+            const dataFim = document.getElementById('filtroDataFim').value;
+            const pagamento = document.getElementById('filtroPagamento').value;
+            const mes = document.getElementById('filtroMes').value;
+
+            let filtradas = [...todasVendas];
+
+            const tsInicio = converterDataParaTimestamp(dataInicio);
+            const tsFim = converterDataParaTimestamp(dataFim);
+            if (tsInicio) filtradas = filtradas.filter(v => (v.timestamp || 0) >= tsInicio);
+            if (tsFim) { const fim = tsFim + 86400000; filtradas = filtradas.filter(v => (v.timestamp || 0) <= fim); }
+            if (pagamento !== 'all') {
+                filtradas = filtradas.filter(v => (v.payment || '').toLowerCase() === pagamento);
+            }
+            if (mes !== 'all') {
+                const mesNum = parseInt(mes);
+                filtradas = filtradas.filter(v => new Date(v.timestamp || 0).getMonth() === mesNum);
+            }
+
+            renderizarCaixa(filtradas);
+        }
+
+        function renderizarCaixa(vendas) {
+            let total = 0, qtd = 0, totalDinheiro = 0;
+            vendas.forEach(v => {
+                total += v.total || 0;
+                qtd++;
+                if ((v.payment || '').toLowerCase() === 'dinheiro') {
+                    totalDinheiro += v.total || 0;
+                }
+            });
+
+            document.getElementById('totalVendas').textContent = 'R$ ' + total.toFixed(2);
+            document.getElementById('totalPedidos').textContent = qtd;
+            document.getElementById('mediaVendas').textContent = 'R$ ' + (qtd > 0 ? (total / qtd).toFixed(2) : '0,00');
+            document.getElementById('totalDinheiro').textContent = 'R$ ' + totalDinheiro.toFixed(2);
+
+            const container = document.getElementById('historicoVendas');
+            if (vendas.length === 0) {
+                container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhuma venda encontrada.</p>';
+                return;
+            }
+
+            container.innerHTML = vendas.slice(0, 50).map(v => {
+                const date = new Date(v.timestamp || Date.now());
+                const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', sent: 'Enviado', delivered: 'Entregue' };
+                const status = v.status || 'pending';
+                return `
+                    <div class="venda-item" onclick="verDetalhePedido('${v.id}')">
+                        <div class="info">
+                            <div class="nome">${v.customerName || 'Cliente'} - ${v.productTitle || 'Produto'}</div>
+                            <div class="detalhe">${date.toLocaleDateString('pt-BR')} | ${(v.payment || 'N/A').toUpperCase()} | ${statusLabels[status] || 'Pendente'}</div>
+                        </div>
+                        <div class="valor">R$ ${(v.total || 0).toFixed(2)}</div>
+                        <div class="acoes">
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();excluirVenda('${v.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function excluirVenda(id) {
+            if (confirm('Excluir esta venda permanentemente?')) {
+                database.ref(`sales/${id}`).remove();
+                carregarCaixa();
+            }
+        }
+
+        function limparFiltrosCaixa() {
+            document.getElementById('filtroDataInicio').value = '';
+            document.getElementById('filtroDataFim').value = '';
+            document.getElementById('filtroPagamento').value = 'all';
+            document.getElementById('filtroMes').value = 'all';
+            filtrarCaixa();
+        }
+
+        function baixarHistorico() {
+            const vendas = todasVendas;
+            if (vendas.length === 0) { alert('Nenhuma venda para exportar.'); return; }
+            let csv = 'Cliente,Produto,Total,Pagamento,Data,Status\n';
+            vendas.forEach(v => {
+                const date = new Date(v.timestamp || Date.now());
+                const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', sent: 'Enviado', delivered: 'Entregue' };
+                csv += `"${v.customerName || 'Cliente'}","${v.productTitle || 'Produto'}","${(v.total || 0).toFixed(2)}","${(v.payment || 'N/A').toUpperCase()}","${date.toLocaleString('pt-BR')}","${statusLabels[v.status] || 'Pendente'}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'vendas_export.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ==================== HISTORICO ====================
+        function carregarHistorico() { filtrarHistorico(); }
+
+        function filtrarHistorico() {
+            const dataInicio = document.getElementById('histDataInicio').value;
+            const dataFim = document.getElementById('histDataFim').value;
+            const status = document.getElementById('histStatus').value;
+
+            let filtradas = [...todasVendas];
+
+            const tsInicio = converterDataParaTimestamp(dataInicio);
+            const tsFim = converterDataParaTimestamp(dataFim);
+            if (tsInicio) filtradas = filtradas.filter(v => (v.timestamp || 0) >= tsInicio);
+            if (tsFim) { const fim = tsFim + 86400000; filtradas = filtradas.filter(v => (v.timestamp || 0) <= fim); }
+            if (status !== 'all') {
+                filtradas = filtradas.filter(v => (v.status || 'pending') === status);
+            }
+
+            const container = document.getElementById('historicoCompleto');
+            if (filtradas.length === 0) {
+                container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Nenhum registro encontrado.</p>';
+                return;
+            }
+
+            container.innerHTML = filtradas.map(v => {
+                const date = new Date(v.timestamp || Date.now());
+                const statusLabels = { pending: 'Pendente', confirmed: 'Confirmado', sent: 'Enviado', delivered: 'Entregue' };
+                const status = v.status || 'pending';
+                return `
+                    <div class="venda-item" onclick="verDetalhePedido('${v.id}')">
+                        <div class="info">
+                            <div class="nome">${v.customerName || 'Cliente'} - ${v.productTitle || 'Produto'}</div>
+                            <div class="detalhe">${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})} | ${(v.payment || 'N/A').toUpperCase()} | ${statusLabels[status] || 'Pendente'}</div>
+                        </div>
+                        <div class="valor">R$ ${(v.total || 0).toFixed(2)}</div>
+                        <div class="acoes">
+                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();excluirVenda('${v.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function limparFiltrosHistorico() {
+            document.getElementById('histDataInicio').value = '';
+            document.getElementById('histDataFim').value = '';
+            document.getElementById('histStatus').value = 'all';
+            filtrarHistorico();
+        }
+
+        // ==================== INICIALIZAR ====================
+        document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('active'); }); });
+        setProductColors([]); renderSizes(); loadProducts(); loadCategoryOptions(); loadSuggestions(); loadCupons();
+    </script>
+</body>
+</html>
